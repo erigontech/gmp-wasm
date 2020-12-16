@@ -34,25 +34,18 @@ see https://www.gnu.org/licenses/.  */
 
 #include <stdlib.h>
 
-#include <signal.h>
-
 #include "gmp-impl.h"
 
 int gmp_errno = 0;
 
 
-/* Use SIGFPE on systems which have it. Otherwise, deliberate divide
-   by zero, which triggers an exception on most systems. On those
-   where it doesn't, for example power and powerpc, use abort instead. */
+/* Deliberately divide by zero, which triggers an exception on most systems.
+   On those where it doesn't, for example power and powerpc, use abort instead. */
 void
 __gmp_exception (int error_bit)
 {
   gmp_errno |= error_bit;
-#ifdef SIGFPE
-  raise (SIGFPE);
-#else
   __gmp_junk = 10 / __gmp_0;
-#endif
   abort ();
 }
 

@@ -34,49 +34,20 @@ see https://www.gnu.org/licenses/.  */
 
 #include "config.h"
 
-#include <signal.h>
 #include <stdlib.h>
 
-#if HAVE_UNISTD_H
-#include <unistd.h>  /* for getpid */
-#endif
-
 #include "gmp-impl.h"
-
-
-/* Incidentally, kill is not available on mingw, but that's ok, it has raise
-   and we'll be using that.  */
-#if ! HAVE_RAISE
-#define raise(sig)   kill (getpid(), sig)
-#endif
 
 
 /* __gmp_invalid_operation is for an invalid floating point operation, like
    mpz_set_d on a NaN or Inf.  It's done as a subroutine to minimize code in
    places raising an exception.
 
-   feraiseexcept(FE_INVALID) is not used here, since unfortunately on most
-   systems it would require libm.
-
-   Alternatives:
-
-   It might be possible to check whether a hardware "invalid operation" trap
-   is enabled or not before raising a signal.  This would require all
-   callers to be prepared to continue with some bogus result.  Bogus returns
-   are bad, but presumably an application disabling the trap is prepared for
-   that.
-
-   On some systems (eg. BSD) the signal handler can find out the reason for
-   a SIGFPE (overflow, invalid, div-by-zero, etc).  Perhaps we could get
-   that into our raise too.
-
-   i386 GLIBC implements feraiseexcept(FE_INVALID) with an asm fdiv 0/0.
-   That would both respect the exceptions mask and give a reason code in a
-   BSD signal.  */
-
+   Deliberately divide by zero, which triggers an exception on most systems.
+   On those where it doesn't, for example power and powerpc, use abort instead. */
 void
 __gmp_invalid_operation (void)
 {
-  raise (SIGFPE);
+  __gmp_junk = 10 / __gmp_0;
   abort ();
 }
